@@ -53,8 +53,6 @@ if [ "$cmd" = "GET" ]; then
         # double extra bonus points if you make each file clickable!
         info=$(cat "$webroot/$file")	
 
-	click=".command"
-
 	if [ -d "$webroot/$file" ]; then
 		if [ -f "./$file/index.html" ]; then
 			echo "./$file/index.html"
