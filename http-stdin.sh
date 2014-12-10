@@ -64,6 +64,23 @@ if [ "$cmd" = "GET" ]; then
             # FIXME: implement the 403 error code, which gets displayed when the file does not have permissions
             # it should display the page 403.html if it exists;
             # otherwise, it should display a standard error page
+			if ! [ -r $webroot/$file ]; then
+				echo "HTTP/1.1 403 Forbidden"
+				error403=$(cat "$webroot/403.html")
+				if [ $? = 0 ]; then
+					echo "Content-length: ${#error403}"
+					echo ""
+					echo "$error403"
+				else
+					std403error="<html><head><title>403 Error: Forbidden\
+								 </title></head><body> 403 Error: Forbidden.\
+								 You don't have permission to access $file.\
+								 </body></html>"
+					echo "Content-length: ${#std403error}"
+					echo ""
+					echo "$std403error"
+				fi
+			fi
 
             # FIXME: implement the 404 error code, which gets displayed when the file does not exist
             # it should display the page 404.html if it exists;
