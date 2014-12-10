@@ -23,9 +23,11 @@ if [ "$cmd" = "GET" ]; then
     file=$(cut -d'?' -f1 <<< "$request")
     args=$(cut -d'?' -f2 <<< "$request")
 
+    
+
     # if the requested file is a shell script, execute the script
     # this is a Computer Generated Information (CGI) webpage
-    if [ ${file##*.} = "sh" ] && [ -f "$webroot/$file" ]; then
+    if [[ ${file##*.} = "sh"  &&  -f "$webroot/$file" ]]; then
 
         # FIXME: php, perl, python, and ruby are also popular languages for writing cgi scripts;
         # add support for one (or more) of these other languages
@@ -44,13 +46,25 @@ if [ "$cmd" = "GET" ]; then
 
     # the requested file is not a shell script, so just return the file exactly
     else
-
+	
         # FIXME: if the requested file is a directory, we should:
         # display "./$file/index.html" if it exists;
         # otherwise, we should display all the files in the directory
         # double extra bonus points if you make each file clickable!
-        info=$(cat "$webroot/$file")
+        info=$(cat "$webroot/$file")	
 
+	click=".command"
+
+	if [ -d "$webroot/$file" ]; then
+		if [ -f "./$file/index.html" ]; then
+			echo "./$file/index.html"
+		else
+			for entry in "$file"/*; do
+				echo "$entry"
+			done
+		fi
+	fi
+	
         # the file exists, print it to stdout
         if [ $? = 0 ]; then
             echo "HTTP/1.1 200 OK"
