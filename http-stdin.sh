@@ -76,7 +76,7 @@ if [ "$cmd" = "GET" ]; then
                     echo ""
                     echo "$info"
                 else
-                    read -d '' info << "EOF"
+                    info="
 <html>
   <head>
     <title>404 Not Found</title>
@@ -86,7 +86,8 @@ if [ "$cmd" = "GET" ]; then
     <p>The requested URL $file was not found on this server.</p>
   </body>
 </html>
-EOF
+"
+ 
                     echo "HTTP/1.1 404 Not Found"
                     echo "Content-length:${#info}"
                     echo ""
