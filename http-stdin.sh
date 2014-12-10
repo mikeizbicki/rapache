@@ -65,24 +65,34 @@ if [ "$cmd" = "GET" ]; then
             # it should display the page 403.html if it exists;
             # otherwise, it should display a standard error page
 
-            # FIXME: implement the 404 error code, which gets displayed when the file does not exist
-            # it should display the page 404.html if it exists;
-            # otherwise, it should display a standard error page
-			if [ -e $info ]; then
-				error404=$(cat "$webroot/404.html")
-				if [ $? = 0 ]; then
-					echo "HTTP/1.1 404 Not Found"
-					echo "Content-length: ${#error404}"
-					echo ""
-					echo "$error404"
-				else
-					default404="<html><head><title>404 Not Found</title></head><body><h1>Not Found</h1>$default404<p>The requested URL $file was not found on this server.</p></body></html>"
-					echo "HTTP/1.1 404 Not Found"
-					echo "Content-length:${#default404}"
-					echo ""
-					echo "$default404"
-				fi
-			fi
+            # This implements the 404 error page. It checks if 404.html exists in the webroot directory.
+            # If it exists, it will display that page.
+            # If it does not exist, it will display a standard page indicating which page is missing.
+            if [ -e $info ]; then
+                info=$(cat "$webroot/404.html")
+                if [ $? = 0 ]; then
+                    echo "HTTP/1.1 404 Not Found"
+                    echo "Content-length: ${#info}"
+                    echo ""
+                    echo "$info"
+                else
+                    read -d '' info << "EOF"
+<html>
+  <head>
+    <title>404 Not Found</title>
+  </head>
+  <body>
+    <h1>Not Found</h1>
+    <p>The requested URL $file was not found on this server.</p>
+  </body>
+</html>
+EOF
+                    echo "HTTP/1.1 404 Not Found"
+                    echo "Content-length:${#info}"
+                    echo ""
+                    echo "$info"
+                fi
+            fi
         fi
 
         # FIXME: there is currently a bug with filetypes that are not text files (e.g. images)
