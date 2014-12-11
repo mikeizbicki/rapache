@@ -45,34 +45,43 @@ if [ "$cmd" = "GET" ]; then
     # the requested file is not a shell script, so just return the file exactly
     else
 
-        # FIXME: if the requested file is a directory, we should:
-        # display "./$file/index.html" if it exists;
-        # otherwise, we should display all the files in the directory
-        # double extra bonus points if you make each file clickable!
-        info=$(cat "$file")
-
-        # the file exists, print it to stdout
-        if [ $? = 0 ]; then
-            echo "HTTP/1.1 200 OK"
-            echo "Content-length: ${#info}"
-            echo ""
-            echo "$info"
-
-        # the file could not be accessed
+        #check if requested file is a directory
+        if [ -d "$webroot/$file" ]; then
+            if [ -f "./$file/index.html" ]; then
+                #display index.html
+                echo $(cat "$webroot/$file/index.html")
+            else
+                #print out each file in the directory
+                for entry in "$file"/*; do
+                    echo "$entry"
+                done
+            fi
+        #if requested file isn't a directory
         else
-            echo ""
-             # This implements the 404 error page and checks if 404.html exists in the webroot directory.
-            if [ ! -e "$file" ]; then
-                info=$(cat "$webroot/404.html")
-                # If the provided 404 page exists, we will display that page.
-                if [ $? = 0 ]; then
-                    echo "HTTP/1.1 404 Not Found"
-                    echo "Content-length: ${#info}"
-                    echo ""
-                    echo "$info"
-                # Else, if the provided 404 page does not exist, we will display a standard error page.
-                else
-                    info="
+            info=$(cat "$webroot/$file")
+
+       	    # the file exists, print it to stdout
+            if [ $? = 0 ]; then
+       	        echo "HTTP/1.1 200 OK"
+                echo "Content-length: ${#info}"
+                echo ""
+                echo "$info"
+
+            # the file could not be accessed
+            else
+                echo ""
+                 # This implements the 404 error page and checks if 404.html exists in the webroot directory.
+                if [ ! -e "$file" ]; then
+                    info=$(cat "$webroot/404.html")
+                    # If the provided 404 page exists, we will display that page.
+                    if [ $? = 0 ]; then
+                        echo "HTTP/1.1 404 Not Found"
+                        echo "Content-length: ${#info}"
+                        echo ""
+                        echo "$info"
+                    # Else, if the provided 404 page does not exist, we will display a standard error page.
+                    else
+                        info="
 <html>
   <head>
     <title>404 Not Found</title>
@@ -83,44 +92,41 @@ if [ "$cmd" = "GET" ]; then
   </body>
 </html>
 "
-                    echo "HTTP/1.1 404 Not Found"
-                    echo "Content-length:${#info}"
-                    echo ""
-                    echo "$info"
+                        echo "HTTP/1.1 404 Not Found"
+                        echo "Content-length:${#info}"
+                        echo ""
+                        echo "$info"
+                    fi
+                # This section of code handles 403: Forbidden Errors.
+                elif ! [ -r "$file" ]; then
+                    echo "HTTP/1.1 403 Forbidden"
+                    error403=$(cat "$webroot/403.html")
+                    # If $webroot/403.html exists, display that file.
+                    if [ $? = 0 ]; then
+                        echo "Content-length: ${#error403}"
+                        echo ""
+                        echo "$error403"
+                    # Otherwise, display a default 403 error page.			
+                    else
+                        info="
+                            <html>
+                              <head>
+                                <title>
+                                  403 Error: Forbidden
+                                </title>
+                              </head>
+                              <body>
+                                403 Error: Forbidden. You don't have permission to access $file on this server.
+                              </body>
+                            </html>
+                        "
+                        echo "Content-length: ${#info}"
+                        echo ""
+                        echo $info
+                    fi
                 fi
-            # This section of code handles 403: Forbidden Errors.
-            elif ! [ -r "$file" ]; then
-                echo "HTTP/1.1 403 Forbidden"
-                error403=$(cat "$webroot/403.html")
-                # If $webroot/403.html exists, display that file.
-                if [ $? = 0 ]; then
-                    echo "Content-length: ${#error403}"
-                    echo ""
-                    echo "$error403"
-                # Otherwise, display a default 403 error page.			
-                else
-                    info="
-                        <html>
-                          <head>
-                            <title>
-                              403 Error: Forbidden
-                            </title>
-                          </head>
-                          <body>
-                            403 Error: Forbidden. You don't have permission to access $file on this server.
-                          </body>
-                        </html>
-                    "
-                    echo "Content-length: ${#info}"
-                    echo ""
-                    echo $info
-                fi
-            fi
 
-            # FIXME: implement the 404 error code, which gets displayed when the file does not exist
-            # it should display the page 404.html if it exists;
-            # otherwise, it should display a standard error page
-        fi
+            fi
 
         # FIXME: there is currently a bug with filetypes that are not text files (e.g. images)
         # firefox will interpret everything we send over as a text file
@@ -128,6 +134,7 @@ if [ "$cmd" = "GET" ]; then
         # then adjust the mime-type in the header appropriately
         # this will require some research to figure out exactly what to do
 
+        fi
     fi
 
 # the POST request is also a valid http command
