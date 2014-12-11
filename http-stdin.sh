@@ -66,16 +66,16 @@ if [ "$cmd" = "GET" ]; then
             # otherwise, it should display a standard error page
 
             # This implements the 404 error page and checks if 404.html exists in the webroot directory.
-            # If the provided 404 page exists, we will display that page.
             if [ -e $info ]; then
                 info=$(cat "$webroot/404.html")
+                # If the provided 404 page exists, we will display that page.
                 if [ $? = 0 ]; then
                     echo "HTTP/1.1 404 Not Found"
                     echo "Content-length: ${#info}"
                     echo ""
                     echo "$info"
-                else
                 # Else, if the provided 404 page does not exist, we will display a standard error page.
+                else
                     info="
 <html>
   <head>
