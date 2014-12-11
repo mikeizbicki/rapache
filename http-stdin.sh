@@ -20,12 +20,12 @@ function urldecode() {
 # the GET request is the most common http command
 if [ "$cmd" = "GET" ]; then
 
-    file=$(cut -d'?' -f1 <<< "$request")
+    file=$webroot$(cut -d'?' -f1 <<< "$request")
     args=$(cut -d'?' -f2 <<< "$request")
 
     # if the requested file is a shell script, execute the script
     # this is a Computer Generated Information (CGI) webpage
-    if [ ${file##*.} = "sh" ] && [ -f "$webroot/$file" ]; then
+    if [ ${file##*.} = "sh" ] && [ -f "$file" ]; then
 
         # FIXME: php, perl, python, and ruby are also popular languages for writing cgi scripts;
         # add support for one (or more) of these other languages
@@ -35,7 +35,7 @@ if [ "$cmd" = "GET" ]; then
             export "$arg"
             echo "$arg" >&2
         done
-        info=$($webroot/$file)
+        info=$(file)
 
         echo "HTTP/1.1 200 OK"
         echo "Content-length: ${#info}"
@@ -49,7 +49,7 @@ if [ "$cmd" = "GET" ]; then
         # display "./$file/index.html" if it exists;
         # otherwise, we should display all the files in the directory
         # double extra bonus points if you make each file clickable!
-        info=$(cat "$webroot/$file")
+        info=$(cat "$file")
 
         # the file exists, print it to stdout
         if [ $? = 0 ]; then
@@ -61,8 +61,35 @@ if [ "$cmd" = "GET" ]; then
         # the file could not be accessed
         else
             echo ""
+             # This implements the 404 error page and checks if 404.html exists in the webroot directory.
+            if [ ! -e "$file" ]; then
+                info=$(cat "$webroot/404.html")
+                # If the provided 404 page exists, we will display that page.
+                if [ $? = 0 ]; then
+                    echo "HTTP/1.1 404 Not Found"
+                    echo "Content-length: ${#info}"
+                    echo ""
+                    echo "$info"
+                # Else, if the provided 404 page does not exist, we will display a standard error page.
+                else
+                    info="
+<html>
+  <head>
+    <title>404 Not Found</title>
+  </head>
+  <body>
+    <h1>Not Found</h1>
+    <p>The requested URL $file was not found on this server.</p>
+  </body>
+</html>
+"
+                    echo "HTTP/1.1 404 Not Found"
+                    echo "Content-length:${#info}"
+                    echo ""
+                    echo "$info"
+                fi
             # This section of code handles 403: Forbidden Errors.
-            if ! [ -r "$webroot/$file" ]; then
+            elif ! [ -r "$file" ]; then
                 echo "HTTP/1.1 403 Forbidden"
                 error403=$(cat "$webroot/403.html")
                 # If $webroot/403.html exists, display that file.
