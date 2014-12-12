@@ -2,17 +2,23 @@
 
 # FIXME: what if the file named "pipe" already exists and is being used by something else?
 mkfifo pipe
+doBreak=0
+
+#trap SIGINT and cause it to set doBreak to 1
+trap "doBreak=1" SIGINT
 
 while true; do
-    nc -lp 8080 < pipe | ./http-stdin.sh > pipe
+	nc -lp 8080 < pipe | ./http-stdin.sh > pipe
+
+	#if SIGINT has been received, break the loop
+	if [ doBreak=1 ]; then
+		break
+	fi
 done
+
 
 # FIXME: every other web request has a broken connection;
 # to get the points, you'll have to make every web request succeed
 
-# FIXME: when our webserver is running and I press ^C,
-# the current nc process is stopped but the while loop does not break,
-# so another nc process immediately starts.
-# To exit the program, we have to press ^Z, and run `killall http.sh; fg`
 
 
