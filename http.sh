@@ -8,10 +8,10 @@ doBreak=0
 trap "doBreak=1" SIGINT
 
 while true; do
-	nc -lp 8080 < pipe | ./http-stdin.sh > pipe
+	nc -l 8080 < pipe | ./http-stdin.sh > pipe
 
 	#if SIGINT has been received, break the loop
-	if [ doBreak=1 ]; then
+	if [ "$doBreak" -eq 1 ]; then
 		break
 	fi
 done
