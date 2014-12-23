@@ -62,11 +62,20 @@ if [ "$cmd" = "GET" ]; then
     
             # the file exists, print it to stdout
             if [ $? = 0 ]; then
+
+                #check content-type via mime-type
+                CONTENT_TYPE=$(file --mime-type "$file")
+                
                 echo "HTTP/1.1 200 OK"
+                echo -ne "Content-type: $CONTENT_TYPE"
                 echo "Content-length: ${#info}"
                 echo ""
-                echo "$info"
-    
+                
+                #Its important that you 'cat' the file, because if it is echo'd, the
+                #binary data can get mangled.
+
+                cat $file
+
             # the file could not be accessed
             else
                 echo ""
@@ -82,16 +91,16 @@ if [ "$cmd" = "GET" ]; then
                     # Else, if the provided 404 page does not exist, we will display a standard error page.
                     else
                         info="
-<html>
-  <head>
-    <title>404 Not Found</title>
-  </head>
-  <body>
-    <h1>Not Found</h1>
-    <p>The requested URL $file was not found on this server.</p>
-  </body>
-</html>
-"
+                            <html>
+                              <head>
+                                <title>404 Not Found</title>
+                              </head>
+                              <body>
+                                <h1>Not Found</h1>
+                                <p>The requested URL $file was not found on this server.</p>
+                              </body>
+                            </html>
+                        "
                         echo "HTTP/1.1 404 Not Found"
                         echo "Content-length:${#info}"
                         echo ""
@@ -125,19 +134,8 @@ if [ "$cmd" = "GET" ]; then
                         echo $info
                     fi
                 fi
-    
-                # FIXME: implement the 404 error code, which gets displayed when the file does not exist
-                # it should display the page 404.html if it exists;
-                # otherwise, it should display a standard error page
             fi
-    
-            # FIXME: there is currently a bug with filetypes that are not text files (e.g. images)
-            # firefox will interpret everything we send over as a text file
-            # we should automatically detect the filetype of the file we're sending (using the file command)
-            # then adjust the mime-type in the header appropriately
-            # this will require some research to figure out exactly what to do
-    
-        fi
+           fi
     fi
 
 # the POST request is also a valid http command
