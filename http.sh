@@ -1,10 +1,7 @@
 #!/bin/bash
 
-#Create a temp folder locally, If it exists, do nothing. 
-([ ! -d tmp_pipes ] && mkdir tmp_pipes) || [ -d tmp_pipes ]
-
-#TMPFILE is a unique filename created in the temp folder.
-TMPFILE=$(mktemp -u tmp_pipes/XXXXXXX) || exit 1
+#TMPFILE is a unique filename
+TMPFILE=$(mktemp -ut tmp_pipe.XXXXXXX) || exit 1
 
 #make a pipe with this unique name
 mkfifo "$TMPFILE"
@@ -19,8 +16,8 @@ while true; do
 
 	#if SIGINT has been received, break the loop
 	if [ "$doBreak" -eq 1 ]; then
-		#delete the temp folder
-		rm -r tmp_pipes
+		#delete the temp file
+		rm "$TMPFILE"
 		break
 	fi
 done
