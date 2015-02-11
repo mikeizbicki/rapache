@@ -9,7 +9,7 @@ How to use
 `git clone http://github.com/`
 2. Run http.sh script to start server.
 `./rapache/http.sh`
-All right, the server is running. Now you can go to your chrome enter (http://localhost:8080) to check it out.
+3. All right, the server is running. Now you can go to your chrome enter `http://localhost:8080` to check it out.
 
 Prerequistes
 ---------
