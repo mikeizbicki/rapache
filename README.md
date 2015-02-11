@@ -17,9 +17,9 @@ Linux OS system is necessary because we implement unix utility netcat to build t
 
 Things to be done
 -----------
-Create dynamic resources.
-Add authentication module.
-Add submitting homework module.
-Add grading module.
+1. Create dynamic resources.
+2. Add authentication module.
+3. Add submitting homework module.
+4. Add grading module.
 
 
