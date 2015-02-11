@@ -9,7 +9,7 @@ First clone rapache directory to your machine.
 `git clone http://github.com/`
 then run http.sh script
 `./rapache/http.sh`
-All right, the server is running. Now you can go to your chrome enter http://localhost:8080 to check it out.
+All right, the server is running. Now you can go to your chrome enter (http://localhost:8080) to check it out.
 
 Prerequistes
 ---------
