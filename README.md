@@ -5,9 +5,9 @@ Rapache is a simple webserver built with bash commands. It implement unix comman
 
 How to use
 -------
-First clone rapache directory to your machine.
+1. Clone rapache directory to your machine.
 `git clone http://github.com/`
-then run http.sh script
+2. Run http.sh script to start server.
 `./rapache/http.sh`
 All right, the server is running. Now you can go to your chrome enter (http://localhost:8080) to check it out.
 
