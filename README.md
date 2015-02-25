@@ -7,13 +7,9 @@ and send static or dynamic resources to clients corresponding to different reque
 How to use
 -------
 1. Clone rapache directory to your machine.
-
+2. Enter rapache directory and run `http.sh script` to start server.
 ```
 $ git clone https://github.com/Dongdongshe/rapache
-```
-2. Enter rapache directory and run http.sh script to start server.
-
-```
 $ cd rapache
 $ ./rapache/http.sh
 ```
