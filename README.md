@@ -19,4 +19,4 @@ Linux environment is necessary because we implement unix utility netcat to build
 
 Feature
 -----------
-The server can send Computer-generated-imagery(CGI) to clents depending on different requests. 
+The server can send Computer-generated-imagery(CGI) to clients depending on different requests. 
