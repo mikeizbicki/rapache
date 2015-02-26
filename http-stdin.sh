@@ -35,7 +35,7 @@ if [ "$cmd" = "GET" ]; then
             export "$arg"
             echo "$arg" >&2
         done
-        info=$(file)
+        info=$($file $arg)
 
         echo "HTTP/1.1 200 OK"
         echo "Content-length: ${#info}"
