@@ -60,21 +60,29 @@ if [ "$cmd" = "GET" ]; then
         else
             info=$(cat "$file")
     
-            # the file exists, print it to stdout
+            # if the file exists:
             if [ $? = 0 ]; then
 
-                #check content-type via mime-type
-                CONTENT_TYPE=$(file --mime-type "$file")
-                
-                echo "HTTP/1.1 200 OK"
-                echo -ne "Content-type: $CONTENT_TYPE"
-                echo "Content-length: ${#info}"
-                echo ""
-                
-                #Its important that you 'cat' the file, because if it is echo'd, the
-                #binary data can get mangled.
+                # if the file is an executable, we run it
+                if [ -x "$file" ]; then
+                    $file $(tr '&' ' ' <<< "$args")
 
-                cat $file
+                # otherwise, print it to stdout
+                else
+                    #check content-type via mime-type
+                    CONTENT_TYPE=$(file --mime-type "$file")
+                
+                    echo "HTTP/1.1 200 OK"
+                    echo -ne "Content-type: $CONTENT_TYPE"
+                    echo "Content-length: ${#info}"
+                    echo ""
+                
+                    #Its important that you 'cat' the file, because if it is echo'd, the
+                    #binary data can get mangled.
+
+                    cat $file
+
+                fi
 
             # the file could not be accessed
             else
