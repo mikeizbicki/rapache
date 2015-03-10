@@ -35,7 +35,7 @@ if [ "$cmd" = "GET" ]; then
             export "$arg"
             echo "$arg" >&2
         done
-        info=$(file)
+        info=$($file)
 
         echo "HTTP/1.1 200 OK"
         echo "Content-length: ${#info}"
@@ -60,21 +60,40 @@ if [ "$cmd" = "GET" ]; then
         else
             info=$(cat "$file")
     
-            # the file exists, print it to stdout
+            # if the file exists:
             if [ $? = 0 ]; then
 
-                #check content-type via mime-type
-                CONTENT_TYPE=$(file --mime-type "$file")
-                
-                echo "HTTP/1.1 200 OK"
-                echo -ne "Content-type: $CONTENT_TYPE"
-                echo "Content-length: ${#info}"
-                echo ""
-                
-                #Its important that you 'cat' the file, because if it is echo'd, the
-                #binary data can get mangled.
+                # if the file is an executable, we run it
+                if [ -x "$file" ]; then
+                    #$file $(tr '&' ' ' <<< "$args")
+                    for arg in $(tr '&' ' ' <<< "$args"); do
+                        arg=$(urldecode "$arg")
+                        export "$arg"
+                        echo "$arg" >&2
+                    done
+                    info=$($file)
 
-                cat $file
+                    echo "HTTP/1.1 200 OK"
+                    echo "Content-length: ${#info}"
+                    echo ""
+                    echo "$info"
+
+                # otherwise, print it to stdout
+                else
+                    #check content-type via mime-type
+                    CONTENT_TYPE=$(file --mime-type "$file")
+                
+                    echo "HTTP/1.1 200 OK"
+                    echo -ne "Content-type: $CONTENT_TYPE"
+                    echo "Content-length: ${#info}"
+                    echo ""
+                
+                    #Its important that you 'cat' the file, because if it is echo'd, the
+                    #binary data can get mangled.
+
+                    cat $file
+
+                fi
 
             # the file could not be accessed
             else
