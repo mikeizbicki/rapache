@@ -49,7 +49,13 @@ if [ "$cmd" = "GET" ]; then
         if [ -d "$file" ]; then
             if [ -f "./$file/index.html" ]; then
                 #display index.html
-                echo $(cat "$file/index.html")
+                info=$(cat "$file/index.html")
+
+                echo "HTTP/1.1 200 OK"
+                echo "Content-length: ${#info}"
+                echo ""
+                echo "$info"
+
             else
                 #print out each file in the directory
                 for entry in "$file"/*; do
@@ -60,7 +66,7 @@ if [ "$cmd" = "GET" ]; then
         else
             info=$(cat "$file")
     
-            # if the file exists:
+            # check if the file exists in order to use it
             if [ $? = 0 ]; then
 
                 # if the file is an executable, we run it
@@ -78,7 +84,7 @@ if [ "$cmd" = "GET" ]; then
                     echo ""
                     echo "$info"
 
-                # otherwise, print it to stdout
+                # otherwise, we print it to stdout
                 else
                     #check content-type via mime-type
                     CONTENT_TYPE=$(file --mime-type "$file")
