@@ -22,21 +22,17 @@ if [ "$cmd" = "GET" ]; then
 
     file=$webroot$(cut -d'?' -f1 <<< "$request")
     args=$(cut -d'?' -f2 <<< "$request")
-
     # if the requested file is a shell script, execute the script
     # this is a Computer Generated Information (CGI) webpage
-    if [ ${file##*.} = "sh" ] && [ -f "$file" ]; then
-
-        # FIXME: php, perl, python, and ruby are also popular languages for writing cgi scripts;
-        # add support for one (or more) of these other languages
-
+    if [ -f "$file" ]; then
+    	if [ ${file##*.} = "sh" ] || [ ${file##*.} = "py" ] || [ ${file##*.} = "rb" ] || [ ${file##*.} = "php" ] || [ ${file##*.} = "pl" ];then
         for arg in $(tr '&' ' ' <<< "$args"); do
             arg=$(urldecode "$arg")
             export "$arg"
-            echo "$arg" >&2
+            echo "$arg" >&2 
         done
         info=$($file)
-
+		
         echo "HTTP/1.1 200 OK"
         echo "Content-length: ${#info}"
         echo ""
@@ -161,6 +157,7 @@ if [ "$cmd" = "GET" ]; then
                 fi
             fi
            fi
+        fi
     fi
 
 # the POST request is also a valid http command
