@@ -21,6 +21,3 @@ while true; do
 		break
 	fi
 done
-
-# FIXME: every other web request has a broken connection;
-# to get the points, you'll have to make every web request succeed
