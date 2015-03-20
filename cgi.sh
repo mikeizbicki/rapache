@@ -22,26 +22,29 @@ if [ "$cmd" = "GET" ]; then
 
     file=$webroot$(cut -d'?' -f1 <<< "$request")
     args=$(cut -d'?' -f2 <<< "$request")
-
+    if [ $file = $webroot$args ];then
+    	args=""
+    fi
     # if the requested file is a shell script, execute the script
-    # this is a Computer Generated Information (CGI) webpage
-    if [ ${file##*.} = "sh" ] && [ -f "$file" ]; then
-
-        # FIXME: php, perl, python, and ruby are also popular languages for writing cgi scripts;
-        # add support for one (or more) of these other languages
-
+    # this is a Common Gateway Interface (CGI) webpage
+    if [ ${file##*.} = "sh" ] || [ ${file##*.} = "py" ] || [ ${file##*.} = "rb" ] || [ ${file##*.} = "php" ] || [ ${file##*.} = "pl" ] && [ -f "$file" ]; then
         for arg in $(tr '&' ' ' <<< "$args"); do
             arg=$(urldecode "$arg")
             export "$arg"
-            echo "$arg" >&2
+            echo "$arg" >&2 
         done
-        info=$($file)
+		#store the output of script to temp,and check its content type
+        $file > temp
+        CONTENT_TYPE=$(file --mime-type temp |cut -d' ' -f2)
+		info=$($file)
+		rm temp
 
         echo "HTTP/1.1 200 OK"
+        echo "Content-type: $CONTENT_TYPE"
         echo "Content-length: ${#info}"
         echo ""
         echo "$info"
-
+		
     # the requested file is not a shell script, so just return the file exactly
     else
         
@@ -65,7 +68,6 @@ if [ "$cmd" = "GET" ]; then
         #if requested file isn't a directory
         else
             info=$(cat "$file")
-    
             # check if the file exists in order to use it
             if [ $? = 0 ]; then
 
@@ -78,7 +80,7 @@ if [ "$cmd" = "GET" ]; then
                         echo "$arg" >&2
                     done
                     info=$($file)
-
+		
                     echo "HTTP/1.1 200 OK"
                     echo "Content-length: ${#info}"
                     echo ""
@@ -87,23 +89,21 @@ if [ "$cmd" = "GET" ]; then
                 # otherwise, we print it to stdout
                 else
                     #check content-type via mime-type
-                    CONTENT_TYPE=$(file --mime-type "$file")
-                
+                    CONTENT_TYPE=$(file --mime-type "$file"|cut -d' ' -f2)
+
                     echo "HTTP/1.1 200 OK"
-                    echo -ne "Content-type: $CONTENT_TYPE"
+                    echo "Content-type: $CONTENT_TYPE"
                     echo "Content-length: ${#info}"
                     echo ""
-                
+ 
                     #Its important that you 'cat' the file, because if it is echo'd, the
                     #binary data can get mangled.
-
                     cat $file
 
                 fi
 
             # the file could not be accessed
             else
-                echo ""
                  # This implements the 404 error page and checks if 404.html exists in the webroot directory.
                 if [ ! -e "$file" ]; then
                     info=$(cat "$webroot/404.html")
@@ -160,12 +160,38 @@ if [ "$cmd" = "GET" ]; then
                     fi
                 fi
             fi
-           fi
+        fi
     fi
 
 # the POST request is also a valid http command
-elif ["$cmd" = "POST" ]; then
-    echo "po"
-    # FIXME: implement post requests
-    # this will require a bit of research about what exactly post requests do
+elif [ "$cmd" = "POST" ]; then
+#read POST request header
+	while read -r line; do
+		[ "$line" == $'\r' ] && break;
+		if [[ "$line" =~ ^Content-Length ]];then
+			cont_len=`echo -e "$line" |tr -d '\r' | cut -d: -f2`
+		fi
+	done
+#read POST request body
+	[ "$cont_len" -ne 0 ] && read -n $cont_len body
+#get date for POST message body
+	foo=$(cut -d'&' -f1 <<<"$body"|cut -d"=" -f2)
+	bar=$(cut -d'&' -f2 <<<"$body"|cut -d"=" -f2)	
+    info="
+		<html>
+			<head>
+				<title>POST response</title>
+            </head>
+            <body>
+                <h1>http-stdin.sh</h1>
+                <p>foo=$foo</p>
+                <p>bar=$bar</p>
+            </body>
+        </html>
+        "
+	echo "HTTP/1.1 200 OK"
+	echo "Content-Type: text/html; charset=utf-8"
+    echo "Content-length: ${#info}"
+    echo ""
+    echo "$info"
 fi
