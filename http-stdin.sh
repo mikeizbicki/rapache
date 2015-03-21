@@ -18,7 +18,7 @@ echo "$cmd $request $protocol" >&2
 # input is stdin, output is stdout
 function urldecode() {
     local url_encoded="${1//+/ }"
-    printf '%b' "${url_encoded//%/\x}"
+    printf '%b' "${url_encoded//%/\\x}"
 }
 
 # the GET request is the most common http command
@@ -90,11 +90,18 @@ if [ "$cmd" = "GET" ]; then
 
                 # otherwise, we print it to stdout
                 else
-                    #check content-type via mime-type
-                    CONTENT_TYPE=$(file --mime-type "$file")
+                    #check content-type by file extension
+                    if [ ${file##*.} = "css" ] && [ -f "$file" ]; then
+                        CONTENT_TYPE="text/css"
+                    # TO DO: add checks for other file extensions as needed here
+
+                    # otherwise we check content-type via mime-type
+                    else
+                        CONTENT_TYPE=$(file --mime-type "$file")
+                    fi
                 
                     echo "HTTP/1.1 200 OK"
-                    echo -ne "Content-type: $CONTENT_TYPE"
+                    echo -e "Content-type: $CONTENT_TYPE"
                     echo "Content-length: ${#info}"
                     echo ""
                 
