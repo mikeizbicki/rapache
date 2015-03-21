@@ -1,7 +1,11 @@
 #!/bin/bash
 
-# this is the location of all the files
-webroot="."
+# $webroot is the location of all the files
+# by default, $webroot is current directory, but can be changed
+# by setting $webroot variable before running rapache
+if [ -z $webroot ]; then
+    webroot="."
+fi
 
 # read in the http request from stdin
 read cmd request protocol
