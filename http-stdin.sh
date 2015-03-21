@@ -18,7 +18,7 @@ echo "$cmd $request $protocol" >&2
 # input is stdin, output is stdout
 function urldecode() {
     local url_encoded="${1//+/ }"
-    printf '%b' "${url_encoded//%/\x}"
+    printf '%b' "${url_encoded//%/\\x}"
 }
 
 # the GET request is the most common http command
@@ -45,6 +45,17 @@ if [ "$cmd" = "GET" ]; then
         echo "Content-length: ${#info}"
         echo ""
         echo "$info"
+
+    # if the requested file is a CSS file,
+    # we send the contents of the file to allow for complex formatting of webpages
+    elif [ ${file##*.} = "css" ] && [ -f "$file" ]; then
+         info=$(cat $file)
+ 
+         echo "HTTP/1.1 200 OK"
+         echo "Content-type: text/css"
+         echo "Content-length: ${#info}"
+         echo ""
+         echo "$info"
 
     # the requested file is not a shell script, so just return the file exactly
     else
