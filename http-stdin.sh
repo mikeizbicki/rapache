@@ -26,7 +26,10 @@ if [ "$cmd" = "GET" ]; then
 
     file=$webroot$(cut -d'?' -f1 <<< "$request")
     args=$(cut -d'?' -f2 <<< "$request")
-
+	# if no arguments are passed to server, set args null.
+	if [ $file = $webroot$args ];then
+		args=""
+	fi
     # if requested file is a executable, we run it and display output
     # this is a Computer Generated Information (CGI) webpage
     if [ -f "$file" ] && [ -x "$file" ]; then
