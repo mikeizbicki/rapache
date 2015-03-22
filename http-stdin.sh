@@ -26,22 +26,28 @@ if [ "$cmd" = "GET" ]; then
 
     file=$webroot$(cut -d'?' -f1 <<< "$request")
     args=$(cut -d'?' -f2 <<< "$request")
-
-    # if the requested file is a shell script, execute the script
+	# if no arguments are passed to server, set args null.
+	if [ $file = $webroot$args ];then
+		args=""
+	fi
+    # if requested file is a executable, we run it and display output
     # this is a Computer Generated Information (CGI) webpage
-    if [ ${file##*.} = "sh" ] && [ -f "$file" ]; then
-
-        # FIXME: php, perl, python, and ruby are also popular languages for writing cgi scripts;
-        # add support for one (or more) of these other languages
+    if [ -f "$file" ] && [ -x "$file" ]; then
 
         for arg in $(tr '&' ' ' <<< "$args"); do
             arg=$(urldecode "$arg")
             export "$arg"
             echo "$arg" >&2
         done
+		#store the output of executable to temp, then check its content type. We cut file name, only store content type.
+		$file > temp
+		CONTENT_TYPE=$(file --mime-type temp |cut -d' ' -f2)
+		rm temp
+
         info=$($file)
 
         echo "HTTP/1.1 200 OK"
+        echo -e "Content-type: $CONTENT_TYPE"
         echo "Content-length: ${#info}"
         echo ""
         echo "$info"
@@ -72,50 +78,29 @@ if [ "$cmd" = "GET" ]; then
     
             # check if the file exists in order to use it
             if [ $? = 0 ]; then
+                #check content-type by file extension
+                if [ ${file##*.} = "css" ] && [ -f "$file" ]; then
+                    CONTENT_TYPE="text/css"
+                # TO DO: add checks for other file extensions as needed here
 
-                # if the file is an executable, we run it
-                if [ -x "$file" ]; then
-                    #$file $(tr '&' ' ' <<< "$args")
-                    for arg in $(tr '&' ' ' <<< "$args"); do
-                        arg=$(urldecode "$arg")
-                        export "$arg"
-                        echo "$arg" >&2
-                    done
-                    info=$($file)
-
-                    echo "HTTP/1.1 200 OK"
-                    echo "Content-length: ${#info}"
-                    echo ""
-                    echo "$info"
-
-                # otherwise, we print it to stdout
+                # otherwise we check content-type via mime-type
                 else
-                    #check content-type by file extension
-                    if [ ${file##*.} = "css" ] && [ -f "$file" ]; then
-                        CONTENT_TYPE="text/css"
-                    # TO DO: add checks for other file extensions as needed here
-
-                    # otherwise we check content-type via mime-type
-                    else
-                        CONTENT_TYPE=$(file --mime-type "$file")
-                    fi
-                
-                    echo "HTTP/1.1 200 OK"
-                    echo -e "Content-type: $CONTENT_TYPE"
-                    echo "Content-length: ${#info}"
-                    echo ""
-                
-                    #Its important that you 'cat' the file, because if it is echo'd, the
-                    #binary data can get mangled.
-
-                    cat $file
-
+                    CONTENT_TYPE=$(file --mime-type "$file"|cut -d' ' -f2)
                 fi
+                
+                echo "HTTP/1.1 200 OK"
+                echo -e "Content-type: $CONTENT_TYPE"
+                echo "Content-length: ${#info}"
+                echo ""
+                
+                #Its important that you 'cat' the file, because if it is echo'd, the
+                #binary data can get mangled.
+
+                cat $file
 
             # the file could not be accessed
             else
-                echo ""
-                 # This implements the 404 error page and checks if 404.html exists in the webroot directory.
+                # This implements the 404 error page and checks if 404.html exists in the webroot directory.
                 if [ ! -e "$file" ]; then
                     info=$(cat "$webroot/404.html")
                     # If the provided 404 page exists, we will display that page.
@@ -175,8 +160,33 @@ if [ "$cmd" = "GET" ]; then
     fi
 
 # the POST request is also a valid http command
-elif ["$cmd" = "POST" ]; then
-    echo "po"
-    # FIXME: implement post requests
-    # this will require a bit of research about what exactly post requests do
+elif [ "$cmd" = "POST" ]; then
+	#read POST request header
+	while read -r line; do
+		# if read to the end of header, stop
+		[ "$line" == $'\r' ] && break;
+		# read Content length from header
+		if [[ "$line" =~ ^Content-Length ]];then
+			cont_len=`echo -e "$line" |tr -d '\r' | cut -d: -f2`
+		fi
+	done	
+	#read POST request body
+	[ "$cont_len" -ne 0 ] && read -n $cont_len body	
+	#get date for POST message body
+	export "foo=$(cut -d'&' -f1 <<<"$body"|cut -d"=" -f2)"
+	export "bar=$(cut -d'&' -f2 <<<"$body"|cut -d"=" -f2)"	
+	
+	# check content type of output of executable
+	file=./test.sh
+	$file > temp
+	CONTENT_TYPE=$(file --mime-type temp |cut -d' ' -f2)
+	rm temp
+
+	info=$($file)
+	#display data sent by POST method	
+	echo "HTTP/1.1 200 OK"
+	echo -e "Content-Type: $CONTENT_TYPE"	
+	echo "Content-length: ${#info}"
+	echo ""
+	echo "$info"
 fi
